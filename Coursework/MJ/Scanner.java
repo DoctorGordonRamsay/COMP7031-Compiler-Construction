@@ -86,10 +86,10 @@ public class Scanner {
 		while (ch <= ' ') nextCh(); // skip blanks, tabs, eols
 		Token t = new Token(); t.line = line; t.col = col;
 		switch (ch) {
-		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'k': 
+		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
 		case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's':case 't': case 'u': 
 		case 'v': case 'w': case 'x': case 'y': case 'z': case 'A': case 'B': case 'C': case 'D': case 'E': 
-		case 'F': case 'G': case 'H': case 'I': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P': 
+		case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M': case 'N': case 'O': case 'P':
 		case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
 			readName(t); break;
 		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
@@ -122,6 +122,10 @@ public class Scanner {
 				do nextCh(); while (ch != '\n' && ch != eofCh);
 				t = next(); // call scanner recursively
 			} else t.kind = slash;
+			break;
+		case '\'': 
+			nextCh()
+			readCharCon(t)
 			break;
 		case '!': nextCh();
 			if (ch == '=') { nextCh(); t.kind = neq;} else t.kind = none;
@@ -163,16 +167,52 @@ public class Scanner {
 	
 	private static void readCharCon(Token t) {
 		t.val = "";
-		
-		while (ch != '\''){
-			t.val += ch;
+
+		if (ch == '\'') {
+			System.out.println("line " + line + " col " + col + ": Empty character constant");
+			t.kind = none;
+			nextCh();
+			return;
+		}
+
+		if (ch == '\\') {
+			nextCh();
+			switch (ch) {
+				case 'n':
+					t.val = "\n";
+					break;
+				case 'r':
+					t.val = "\r";
+					break;
+				case 't':
+					t.val = "\t";
+					break;
+				case '\\':
+					t.val = "\\";
+					break;
+				case '\'':
+					t.val = "'";
+					break;
+				default:
+					System.out.println("line " + line + " col " + col + ": Invalid escape sequence");
+					t.kind = none;
+					break;
+			}
+			nextCh();
+		} else {
+			t.val = String.valueOf(ch);
 			nextCh();
 		}
-		
-		if (t.val.length() > 2 && t.val != "\r" && t.val != "\n" && t.val != "\t") {
-			System.out.println("Invalid character");
+
+		if (ch == '\'') {
+			nextCh();
+			if(t.kind != none){
+				t.kind = charCon;
+			}
+
 		} else {
-			t.kind = charCon;
+			System.out.println("line " + line + " col " + col + ": Missing closing quote");
+			t.kind = none;
 		}
 		
 		
