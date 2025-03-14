@@ -1,0 +1,1 @@
+javac MJ/Token.java MJ/Scanner.java MJ/TestScanner.java
