@@ -2,8 +2,8 @@
    =================
 */
 package MJ;
-import java.util.Arrays;
 import java.io.*;
+import java.util.Arrays;
 
 public class Scanner {
 	private static final char eofCh = '\u0080';
@@ -124,8 +124,8 @@ public class Scanner {
 			} else t.kind = slash;
 			break;
 		case '\'': 
-			nextCh()
-			readCharCon(t)
+			nextCh();
+			readCharCon(t);
 			break;
 		case '!': nextCh();
 			if (ch == '=') { nextCh(); t.kind = neq;} else t.kind = none;
