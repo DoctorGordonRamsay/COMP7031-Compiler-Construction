@@ -369,26 +369,26 @@ public class Parser {
 	private static void Relop() {
 		//Relop = "==" | "!=" | ">" | ">=" | "<" | "<=";
 		if (sym == eql) {
-			check(eql);
+			scan();
 		} else if (sym == neq) {
-			check(neq);
+			scan();
 		} else if (sym == gtr) {
-			check(gtr)
+			scan();
 		} else if (sym == geq) {
-			check(geq)
+			scan();
 		} else if (sym == lss) {
-			check(lss)
+			scan();
 		} else if (sym == leq) {
-			check(leq)
+			scan();
 		} else {
-			Error("Invalid Operator");
+			error("Invalid Operator");
 		}
 	}
 	
 	private static void Term() {
 		//Term = Factor {Mulop Factor};
 		Factor();
-		while(true){
+		while(sym == times || sym == rem || sym == slash){
 			Mulop();
 			Factor();
 		}
@@ -400,8 +400,6 @@ public class Parser {
 		if (sym == lbrack) {
 			check(lbrack);
 			check(rbrack);
-		} else {
-			break;
 		}
 	}
 		
@@ -410,8 +408,8 @@ public class Parser {
 		
 		Type();
 		check(ident);
-		while(true){
-			check(comma);
+		while(sym == comma){
+			scan();
 			check(ident);
 		}
 		check(semicolon);
