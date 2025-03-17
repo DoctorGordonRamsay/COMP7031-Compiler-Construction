@@ -9,57 +9,57 @@ import MJ.CodeGen.*;
 
 public class Parser {
 	private static final int  // token codes
-		none      = 0,
-		ident     = 1,
-		number    = 2,
-		charCon   = 3,
-		plus      = 4,
-		minus     = 5,
-		times     = 6,
-		slash     = 7,
-		rem       = 8,
-		eql       = 9,
-		neq       = 10,
-		lss       = 11,
-		leq       = 12,
-		gtr       = 13,
-		geq       = 14,
-		assign    = 15,
-		semicolon = 16,
-		comma     = 17,
-		period    = 18,
-		lpar      = 19,
-		rpar      = 20,
-		lbrack    = 21,
-		rbrack    = 22,
-		lbrace    = 23,
-		rbrace    = 24,
-		class_    = 25,
-		else_     = 26,
-		final_    = 27,
-		if_       = 28,
-		new_      = 29,
-		print_    = 30,
-		program_  = 31,
-		read_     = 32,
-		return_   = 33,
-		void_     = 34,
-		while_    = 35,
-		eof       = 36;
+			none = 0,
+			ident = 1,
+			number = 2,
+			charCon = 3,
+			plus = 4,
+			minus = 5,
+			times = 6,
+			slash = 7,
+			rem = 8,
+			eql = 9,
+			neq = 10,
+			lss = 11,
+			leq = 12,
+			gtr = 13,
+			geq = 14,
+			assign = 15,
+			semicolon = 16,
+			comma = 17,
+			period = 18,
+			lpar = 19,
+			rpar = 20,
+			lbrack = 21,
+			rbrack = 22,
+			lbrace = 23,
+			rbrace = 24,
+			class_ = 25,
+			else_ = 26,
+			final_ = 27,
+			if_ = 28,
+			new_ = 29,
+			print_ = 30,
+			program_ = 31,
+			read_ = 32,
+			return_ = 33,
+			void_ = 34,
+			while_ = 35,
+			eof = 36;
 	private static final String[] name = { // token names for error messages
-	"none", "identifier", "number", "char constant", "+", "-", "*", "/", "%",
-	"==", "!=", "<", "<=", ">", ">=", "=", ";", ",", ".", "(", ")",
-	"[", "]", "{", "}", "class", "else", "final", "if", "new", "print",
-	"program", "read", "return", "void", "while", "eof"
+			"none", "identifier", "number", "char constant", "+", "-", "*", "/", "%",
+			"==", "!=", "<", "<=", ">", ">=", "=", ";", ",", ".", "(", ")",
+			"[", "]", "{", "}", "class", "else", "final", "if", "new", "print",
+			"program", "read", "return", "void", "while", "eof"
 	};
 
-	private static Token t;				// current token (recently recognized)
-	private static Token la;			// lookahead token
-	private static int sym;				// always contains la.kind
-	public  static int errors;  	// error counter
-	private static int errDist;		// no. of correctly recognized tokens since last error
+	private static Token t;                // current token (recently recognized)
+	private static Token la;            // lookahead token
+	private static int sym;                // always contains la.kind
+	public static int errors;    // error counter
+	private static int errDist;        // no. of correctly recognized tokens since last error
 
-	private static Obj curMethod;	// currently compiled method
+	private static Obj curMethod;    // currently compiled method
 
 	//----------- terminal first/sync sets; initialized in method parse() -----
 	private static BitSet firstExpr, firstStat, syncStat, syncDecl;
@@ -103,31 +103,31 @@ public class Parser {
 			error("Invalid operator at Addop()");
 		}
 	}
-	
-	private static void ActPars(){
+
+	private static void ActPars() {
 		//ActPars = "(" [ Expr {"," Expr} ] ")";
 		check(lpar);
-		if (firstExpr.get(sym)){
-			while(sym == comma){
+		if (firstExpr.get(sym)) {
+			while (sym == comma) {
 				scan();
 				Expr();
 			}
 		}
 		check(rpar);
 	}
-		
+
 	private static void Block() {
 		//Block = "{" {Statement} "}";
 		check(lbrace);
-		while(sym == ident){
+		while (sym == ident) {
 			Statement();
 		}
 		check(rbrace);
 	}
-		
+
 	private static void ClassDecl() {
 		//ClassDecl = "class" ident "{" {VarDecl} "}";
-		
+
 		check(class_);
 		check(ident);
 		check(lbrace);
@@ -143,7 +143,7 @@ public class Parser {
 		Relop();
 		Expr();
 	}
-	
+
 	private static void ConstDecl() {
 		//ConstDecl = "final" Type ident "=" (number | charConst) ";";
 		check(final_);
@@ -152,14 +152,14 @@ public class Parser {
 		check(assign);
 		if (sym == number) {
 			scan();
-		} else if (sym == charCon){
+		} else if (sym == charCon) {
 			scan();
 		} else {
 			error("Invalid symbol at ConstDecl");
 		}
 		check(semicolon);
 	}
-	
+
 	private static void Designator() {
 		//Designator = ident {"." ident | "[" Expr "]"};
 		check(ident);
@@ -176,19 +176,19 @@ public class Parser {
 			}
 		}
 	}
-	
+
 	private static void Expr() {
 		//Expr = ["-"] Term {Addop Term};
-		if (sym == minus){
+		if (sym == minus) {
 			scan();
 		}
 		Term();
-		while(sym == plus || sym == minus){
+		while (sym == plus || sym == minus) {
 			Addop();
 			Term();
 		}
-}
-		
+	}
+
 	private static void Factor() {
 		//**Factor = Designator [ActPars]
 		//| number
@@ -197,7 +197,7 @@ public class Parser {
 		//| "(" Expr ")";
 		if (sym == ident) {
 			Designator();
-			if (sym == lpar){
+			if (sym == lpar) {
 				ActPars();
 			}
 		} else if (sym == number) {
@@ -220,7 +220,7 @@ public class Parser {
 			error("Error at Factor");
 		}
 	}
-		
+
 	private static void FormPars() {
 		//FormPars = Type ident {"," Type ident};
 		Type();
@@ -231,25 +231,25 @@ public class Parser {
 			check(ident);
 		}
 	}
-		
+
 	private static void MethodDecl() {
 		//MethodDecl = (Type | "void") ident "(" [FormPars] ")" {VarDecl} Block;
-		
-		if (sym == ident){
+
+		if (sym == ident) {
 			Type();
 		} else if (sym == void_) {
 			scan();
 		} else {
 			error("Error at MethodDecl");
 		}
-		
+
 		check(ident);
 		check(lpar);
 		if (sym == ident) {
 			FormPars();
 		}
 		check(rpar);
-		while(sym == ident){
+		while (sym == ident) {
 			VarDecl();
 		}
 		Block();
@@ -257,42 +257,42 @@ public class Parser {
 
 	private static void Mulop() {
 		//Mulop = "*" | "/" | "%";
-		
+
 		if (sym == times) {
 			scan();
-		} else if (sym == slash){
+		} else if (sym == slash) {
 			scan();
-		} else if (sym == rem){
+		} else if (sym == rem) {
 			scan();
 		} else {
 			error("Invalid operator at Mulop");
 		}
 	}
-	
+
 	private static void Program() {
 
 		//Program = "program" ident {ConstDecl | ClassDecl | VarDecl} '{' {MethodDecl} '}';
-		
+
 		check(program_);
 		check(ident);
-		while (sym == final_ || sym == class_ || sym == ident){
+		while (sym == final_ || sym == class_ || sym == ident) {
 			if (sym == final_) {
 				ConstDecl();
 			} else if (sym == class_) {
 				ClassDecl();
 			} else if (sym == ident) {
 				VarDecl();
-			} else { 
+			} else {
 				error("Invalid Declaration");
 			}
 		}
 		check(lbrace);
-		while(sym == ident || sym == void_){
+		while (sym == ident || sym == void_) {
 			MethodDecl();
 		}
 		check(rbrace);
 	}
-	
+
 	private static void Statement() {
 		//Statement = Designator ("=" Expr | ActPars) ";" 
 		if (sym == ident) {
@@ -306,43 +306,43 @@ public class Parser {
 				error("Assignment or call Expected");
 			}
 			check(semicolon);
-		//| "if" "(" Condition ")" Statement ["else" Statement] 
+			//| "if" "(" Condition ")" Statement ["else" Statement]
 		} else if (sym == if_) {
 			scan();
 			check(lpar);
 			Condition();
 			check(rpar);
-			if (sym == else_){
+			if (sym == else_) {
 				scan();
 				Statement();
 			}
-			
-			
-		//| "while" "(" Condition ")" Statement
+
+
+			//| "while" "(" Condition ")" Statement
 		} else if (sym == while_) {
 			scan();
 			check(lpar);
 			Condition();
 			check(rpar);
 			Statement();
-			
-		//	| "return" [Expr] ";"
+
+			//	| "return" [Expr] ";"
 		} else if (sym == return_) {
 			scan();
-			if (firstExpr.get(sym)){
+			if (firstExpr.get(sym)) {
 				Expr();
 			}
 			check(semicolon);
-		
-		//| "read" "(" Designator ")" ";"
+
+			//| "read" "(" Designator ")" ";"
 		} else if (sym == read_) {
 			scan();
 			check(lpar);
 			Designator();
 			check(rpar);
 			check(semicolon);
-			
-		//	| "print" "(" Expr ["," number] ")" ";"
+
+			//	| "print" "(" Expr ["," number] ")" ";"
 		} else if (sym == print_) {
 			scan();
 			check(lpar);
@@ -353,19 +353,19 @@ public class Parser {
 			}
 			check(rpar);
 			check(semicolon);
-			
-		//	| Block
+
+			//	| Block
 		} else if (sym == lbrace) {
 			Block();
-			
-		//	| ";";
+
+			//	| ";";
 		} else if (sym == semicolon) {
 			check(semicolon);
 		} else {
 			error("Invalid option at statement");
 		}
 	}
-		
+
 	private static void Relop() {
 		//Relop = "==" | "!=" | ">" | ">=" | "<" | "<=";
 		if (sym == eql) {
@@ -384,16 +384,16 @@ public class Parser {
 			error("Invalid Operator");
 		}
 	}
-	
+
 	private static void Term() {
 		//Term = Factor {Mulop Factor};
 		Factor();
-		while(sym == times || sym == rem || sym == slash){
+		while (sym == times || sym == rem || sym == slash) {
 			Mulop();
 			Factor();
 		}
 	}
-	
+
 	private static void Type() {
 		//Type = ident ["[" "]"];
 		check(ident);
@@ -402,13 +402,13 @@ public class Parser {
 			check(rbrack);
 		}
 	}
-		
+
 	private static void VarDecl() {
 		//VarDecl = Type ident {"," ident } ";";
-		
+
 		Type();
 		check(ident);
-		while(sym == comma){
+		while (sym == comma) {
 			scan();
 			check(ident);
 		}
@@ -418,24 +418,48 @@ public class Parser {
 	public static void parse() {
 		BitSet s;
 		// initialize first/sync sets
-		s = new BitSet(64); firstExpr = s;
-		s.set(ident); s.set(number); s.set(charCon); s.set(new_); s.set(lpar); s.set(minus);
+		s = new BitSet(64);
+		firstExpr = s;
+		s.set(ident);
+		s.set(number);
+		s.set(charCon);
+		s.set(new_);
+		s.set(lpar);
+		s.set(minus);
 
-		s = new BitSet(64); firstStat = s;
-		s.set(ident); s.set(if_); s.set(while_); s.set(read_);
-		s.set(return_); s.set(print_); s.set(lbrace); s.set(semicolon);
+		s = new BitSet(64);
+		firstStat = s;
+		s.set(ident);
+		s.set(if_);
+		s.set(while_);
+		s.set(read_);
+		s.set(return_);
+		s.set(print_);
+		s.set(lbrace);
+		s.set(semicolon);
 
-		s = (BitSet)firstStat.clone(); syncStat = s;
-		s.clear(ident); s.set(rbrace); s.set(eof);
+		s = (BitSet) firstStat.clone();
+		syncStat = s;
+		s.clear(ident);
+		s.set(rbrace);
+		s.set(eof);
 
-		s = new BitSet(64); syncDecl = s;
-		s.set(final_); s.set(ident); s.set(class_); s.set(lbrace); s.set(void_); s.set(eof);
+		s = new BitSet(64);
+		syncDecl = s;
+		s.set(final_);
+		s.set(ident);
+		s.set(class_);
+		s.set(lbrace);
+		s.set(void_);
+		s.set(eof);
 
 		// start parsing
-		errors = 0; errDist = 3;
+		errors = 0;
+		errDist = 3;
 		scan();
 		Program();
 		if (sym != eof) error("end of file found before end of program");
 		if (Code.mainPc < 0) error("program contains no 'main' method");
 		//Tab.dumpScope(Tab.curScope.locals);
 	}
+}
