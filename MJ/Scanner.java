@@ -145,7 +145,7 @@ public class Scanner {
 		int index = Arrays.binarySearch(key, t.val);
 		
 		if (index >= 0) {
-			index = keyVal[index];
+			t.kind = keyVal[index];
 		} else {
 			t.kind = ident;
 		}
