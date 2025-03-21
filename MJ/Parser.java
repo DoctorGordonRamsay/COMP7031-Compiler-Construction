@@ -160,33 +160,55 @@ public class Parser {
 		check(semicolon);
 	}
 
-	private static void Designator() {
+	private static Operand Designator() {
 		//Designator = ident {"." ident | "[" Expr "]"};
 		check(ident);
+		Obj obj = Tab.find(t.val);
+		Operand op = new Operand(obj);
 		while (sym == period || sym == lbrack) {
 			if (sym == period) {
 				scan();
 				check(ident);
+				obj = Tab.findField(obj, t.val);
+            	op = new Operand(obj);
 			} else if (sym == lbrack) {
 				scan();
-				Expr();
+				Operand index = Expr();
 				check(rbrack);
+				Code.load(op); 
+           		Code.load(index); 
+            	Code.put(new Operand(Operand.Elem));
 			} else {
 				error("Invalid symbol at designator");
 			}
 		}
+		return op;
 	}
 
-	private static void Expr() {
+	private static Operand Expr() {
+		boolean neg = false;
 		//Expr = ["-"] Term {Addop Term};
 		if (sym == minus) {
+			neg = true;
 			scan();
 		}
-		Term();
-		while (sym == plus || sym == minus) {
-			Addop();
-			Term();
+		Operand left = Term();
+
+		if (neg) {
+			Code.neg(left);
 		}
+		while (sym == plus || sym == minus) {
+			int op = sym;
+			Addop();
+			Operand right = Term();
+
+			if (op == plus) {
+				Code.add(left, right);
+			} else {
+				Code.sub(left, right);
+			}
+		}
+		return left;
 	}
 
 	private static void Factor() {
@@ -293,21 +315,43 @@ public class Parser {
 		check(rbrace);
 	}
 
+	private static void Relop() {
+		//Relop = "==" | "!=" | ">" | ">=" | "<" | "<=";
+		if (sym == eql) {
+			scan();
+		} else if (sym == neq) {
+			scan();
+		} else if (sym == gtr) {
+			scan();
+		} else if (sym == geq) {
+			scan();
+		} else if (sym == lss) {
+			scan();
+		} else if (sym == leq) {
+			scan();
+		} else {
+			error("Invalid Operator");
+		}
+	}
+
 	private static void Statement() {
 		//Statement = Designator ("=" Expr | ActPars) ";" 
 		if (sym == ident) {
-			Designator();
+			Operand left = Designator();
 			if (sym == assign) {
 				scan();
-				Expr();
+				Operand right = Expr();
+				Code.store(left, right);
 			} else if (sym == lpar) {
 				ActPars();
+				Code.callMethod(left.obj);
 			} else {
 				error("Assignment or call Expected");
 			}
 			check(semicolon);
 			//| "if" "(" Condition ")" Statement ["else" Statement]
 		} else if (sym == if_) {
+			IfStatement();
 			scan();
 			check(lpar);
 			Condition();
@@ -320,6 +364,7 @@ public class Parser {
 
 			//| "while" "(" Condition ")" Statement
 		} else if (sym == while_) {
+			WhileStatement();
 			scan();
 			check(lpar);
 			Condition();
@@ -366,41 +411,40 @@ public class Parser {
 		}
 	}
 
-	private static void Relop() {
-		//Relop = "==" | "!=" | ">" | ">=" | "<" | "<=";
-		if (sym == eql) {
-			scan();
-		} else if (sym == neq) {
-			scan();
-		} else if (sym == gtr) {
-			scan();
-		} else if (sym == geq) {
-			scan();
-		} else if (sym == lss) {
-			scan();
-		} else if (sym == leq) {
-			scan();
-		} else {
-			error("Invalid Operator");
-		}
-	}
-
-	private static void Term() {
+	private static Operand Term() {
 		//Term = Factor {Mulop Factor};
-		Factor();
+		Operand left = Factor();
 		while (sym == times || sym == rem || sym == slash) {
+			int op = sym;
 			Mulop();
-			Factor();
+			Operand right = Factor();
+
+			if (op == times) {
+				Code.mul(left, right);
+			} else if (op == slash) {
+				Code.div(left, right);
+			} else {
+				Code.rem(left, right);
+			}
 		}
+		return left;
 	}
 
-	private static void Type() {
+	private static Struct Type() {
+		Obj obj = Tab.find(t.val);
+		if (obj.kind != Obj.Type) {
+			error(t.val + " is not a valid type");
+			return Tab.noType;
+		}
+		Struct type = obj.type;
 		//Type = ident ["[" "]"];
 		check(ident);
 		if (sym == lbrack) {
-			check(lbrack);
+			scan();
 			check(rbrack);
+			type = new Struct(Struct.Arr, type);
 		}
+		return type;
 	}
 
 	private static void VarDecl() {
@@ -460,6 +504,6 @@ public class Parser {
 		Program();
 		if (sym != eof) error("end of file found before end of program");
 		if (Code.mainPc < 0) error("program contains no 'main' method");
-		//Tab.dumpScope(Tab.curScope.locals);
+		Tab.dumpScope(Tab.curScope.locals);
 	}
 }

@@ -167,54 +167,42 @@ public class Scanner {
 	
 	private static void readCharCon(Token t) {
 		t.val = "";
-
-		if (ch == '\'') {
+	
+		if (ch == '\'') { // Empty char constant
 			System.out.println("line " + line + " col " + col + ": Empty character constant");
 			t.kind = none;
 			nextCh();
 			return;
 		}
-
-		if (ch == '\\') {
+	
+		if (ch == '\\') { // Escape sequence handling
 			nextCh();
 			switch (ch) {
-				case 'n':
-					t.val = "\n";
-					break;
-				case 'r':
-					t.val = "\r";
-					break;
-				case 't':
-					t.val = "\t";
-					break;
-				case '\\':
-					t.val = "\\";
-					break;
-				case '\'':
-					t.val = "'";
-					break;
+				case 'n': t.val = "\n"; break;
+				case 'r': t.val = "\r"; break;
+				case 't': t.val = "\t"; break;
+				case '\\': t.val = "\\"; break;
+				case '\'': t.val = "'"; break;
 				default:
-					System.out.println("line " + line + " col " + col + ": Invalid escape sequence");
+					System.out.println("line " + line + " col " + col + ": Invalid character constant");
 					t.kind = none;
-					break;
+					nextCh();
+					return;
 			}
-			nextCh();
-		} else {
-			t.val = String.valueOf(ch);
-			nextCh();
+		} else {  
+			t.val = String.valueOf(ch); 
 		}
-
-		if (ch == '\'') {
-			nextCh();
-			if(t.kind != none){
-				t.kind = charCon;
-			}
-
+	
+		nextCh(); 
+	
+		if (ch == '\'') { // Closing quote check
+			t.kind = charCon;
+			t.numVal = t.val.charAt(0);
+			nextCh(); 
 		} else {
 			System.out.println("line " + line + " col " + col + ": Missing closing quote");
 			t.kind = none;
 		}
-		
-		
 	}
+	
 }
